@@ -31,7 +31,7 @@ const PRESETS = [
   { label: '🚨 SOS', text: 'EMERGENCY: Link requested at Sector 4' },
 ];
 
-export function SendPanel() {
+export function SendPanel({ className = '' }: { className?: string } = {}) {
   const {
     profileId,
     draft,
@@ -86,7 +86,7 @@ export function SendPanel() {
   };
 
   return (
-    <Panel highlight={transmitting} cornerMarks>
+    <Panel highlight={transmitting} cornerMarks className={`h-full flex flex-col justify-between ${className}`}>
       <PanelTitle
         icon={<Radio className="h-4 w-4" />}
         hint={`${bytes.length} / ${params.maxPayloadBytes} B`}

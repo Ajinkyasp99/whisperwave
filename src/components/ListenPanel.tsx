@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { engine } from '../audio/engine';
-import { checkReceiveSupport } from '../audio/secureContext';
 import { deriveParams, PROFILES } from '../dsp/profiles';
 import { useStore } from '../store/useStore';
 import { SignalMeter } from './SignalMeter';
@@ -10,12 +9,11 @@ import {
   Mic,
   MicOff,
   CheckCircle2,
-  AlertTriangle,
   Clock,
   Activity,
 } from 'lucide-react';
 
-export function ListenPanel() {
+export function ListenPanel({ className = '' }: { className?: string } = {}) {
   const {
     profileId,
     listening,
@@ -32,7 +30,6 @@ export function ListenPanel() {
 
   const profile = PROFILES[profileId];
   const params = useMemo(() => deriveParams(profile, sampleRate), [profile, sampleRate]);
-  const support = useMemo(() => checkReceiveSupport(), []);
 
   const toggle = async () => {
     if (listening) {
@@ -59,7 +56,7 @@ export function ListenPanel() {
   const micDb = listening ? 20 * Math.log10(Math.max(level, 1e-6)) : -99;
 
   return (
-    <Panel highlight={listening} cornerMarks>
+    <Panel highlight={listening} cornerMarks className={`h-full flex flex-col justify-between ${className}`}>
       <PanelTitle
         icon={<Mic className="h-4 w-4" />}
         hint={listening ? `BAND ACTIVE · ${(sampleRate / 1000).toFixed(1)} kHz` : 'OFFLINE'}
@@ -73,7 +70,6 @@ export function ListenPanel() {
           variant={listening ? 'ghost' : 'accent'}
           size="lg"
           onClick={toggle}
-          disabled={!support.ok}
           icon={listening ? <MicOff className="h-5 w-5 text-rose-400" /> : <Mic className="h-5 w-5" />}
           scanline={!listening}
           className={`w-full text-base font-black tracking-wider uppercase ${
@@ -92,27 +88,47 @@ export function ListenPanel() {
         <SignalMeter snrDb={snrDb} phase={listening ? phase : 'stopped'} />
       </div>
 
-      {/* Frame Assembly Symbol Progress Bar */}
-      {progress && (
-        <div className="mt-4 rounded-2xl border border-white/12 bg-black/50 p-4 shadow-xl">
-          <div className="mb-2 flex items-baseline justify-between text-xs">
-            <div className="flex items-center gap-2 font-black uppercase tracking-wider accent-text">
-              <span className="h-2 w-2 rounded-full accent-bg animate-ping" />
-              <span>{progress.stage === 'header' ? 'Syncing Frame Header' : 'Demodulating Payload Codeword'}</span>
-            </div>
-            <span className="num font-extrabold text-white">
-              {progress.have} / {progress.need} symbols ({Math.round(pct * 100)}%)
-            </span>
+      {/* Frame Assembly Symbol Progress Bar (Fixed Container) */}
+      <div className="mt-4 rounded-2xl border border-white/12 bg-black/50 p-4 shadow-xl transition-all">
+        <div className="mb-2 flex items-baseline justify-between text-xs">
+          <div className="flex items-center gap-2 font-black uppercase tracking-wider">
+            {progress ? (
+              <>
+                <span className="h-2 w-2 rounded-full accent-bg animate-ping" />
+                <span className="accent-text">
+                  {progress.stage === 'header' ? 'Syncing Frame Header' : 'Demodulating Payload Codeword'}
+                </span>
+              </>
+            ) : listening ? (
+              <>
+                <span className="h-2 w-2 rounded-full bg-emerald-400/80 animate-pulse" />
+                <span className="text-white/60">Listening for Frame Preamble…</span>
+              </>
+            ) : (
+              <>
+                <span className="h-2 w-2 rounded-full bg-white/20" />
+                <span className="text-white/40">Receiver Standby</span>
+              </>
+            )}
           </div>
-
-          <div className="h-2.5 overflow-hidden rounded-full bg-black/60 border border-white/10 scanline">
-            <div
-              className="accent-bg h-full transition-all duration-150 rounded-full shadow-[0_0_14px_var(--accent)]"
-              style={{ width: `${pct * 100}%` }}
-            />
-          </div>
+          <span className="num font-extrabold text-white/80">
+            {progress
+              ? `${progress.have} / ${progress.need} symbols (${Math.round(pct * 100)}%)`
+              : listening
+              ? 'Standby · Ready'
+              : 'Idle'}
+          </span>
         </div>
-      )}
+
+        <div className="h-2.5 overflow-hidden rounded-full bg-black/60 border border-white/10 scanline">
+          <div
+            className={`h-full transition-all duration-150 rounded-full ${
+              progress ? 'accent-bg shadow-[0_0_14px_var(--accent)]' : 'bg-transparent'
+            }`}
+            style={{ width: `${pct * 100}%` }}
+          />
+        </div>
+      </div>
 
       {/* Reception Telemetry Stats */}
       <div className="mt-4 grid grid-cols-3 gap-2.5">
@@ -136,31 +152,11 @@ export function ListenPanel() {
         />
       </div>
 
-      {/* Insecure Origin Alert */}
-      {!support.ok ? (
-        <div className="mt-4 rounded-2xl border border-amber-400/40 bg-amber-400/15 p-4">
-          <div className="flex items-center gap-2 text-amber-200 font-bold text-sm">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>Secure Origin Required</span>
-          </div>
-          <p className="mt-1.5 text-xs leading-relaxed text-amber-100/90">{support.reason}</p>
-          {support.suggestedUrl && (
-            <div className="mt-3 rounded-xl bg-black/50 p-2.5 border border-amber-300/20 text-xs">
-              <p className="text-amber-200/80 mb-1">Restart dev server with HTTPS and open:</p>
-              <a
-                href={support.suggestedUrl}
-                className="num font-mono text-cyan-300 underline underline-offset-2 break-all font-bold"
-              >
-                {support.suggestedUrl}
-              </a>
-            </div>
-          )}
-        </div>
-      ) : !listening ? (
+      {!listening && (
         <div className="mt-4 rounded-xl border border-white/[0.08] bg-white/[0.025] p-3 text-xs leading-relaxed text-white/50">
           <strong className="text-white/80">Zero Audio Filtering:</strong> Echo cancellation, noise suppression, and AGC are bypassed to preserve raw physical chirp frequencies.
         </div>
-      ) : null}
+      )}
     </Panel>
   );
 }

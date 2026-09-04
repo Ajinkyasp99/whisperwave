@@ -109,14 +109,14 @@ console.log('  react mounted');
 // before opening the microphone.
 const NAMES = { ghost: 'Ghost', stealth: 'Stealth', balanced: 'Balanced', longrange: 'Long Range' };
 const tuned = await evaluate(
-  `(() => { const b = [...document.querySelectorAll('[role="radio"]')].find(x => x.textContent.startsWith(${JSON.stringify(NAMES[PROFILE])})); if (!b) return false; b.click(); return true; })()`,
+  `(() => { const b = [...document.querySelectorAll('[role="radio"]')].find(x => x.textContent.trim().toLowerCase().startsWith(${JSON.stringify(NAMES[PROFILE])}.toLowerCase())); if (!b) return false; b.click(); return true; })()`,
   true,
 );
 if (!tuned) throw new Error(`could not select the ${PROFILE} profile`);
 console.log(`  tuned to ${NAMES[PROFILE]}`);
 
 const clicked = await evaluate(
-  `(() => { const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === 'Start listening'); if (!b) return false; b.click(); return true; })()`,
+  `(() => { const b = [...document.querySelectorAll('button')].find(x => /^start listening/i.test(x.textContent.trim())); if (!b) return false; b.click(); return true; })()`,
   true,
 );
 if (!clicked) throw new Error('could not find the Start listening button');

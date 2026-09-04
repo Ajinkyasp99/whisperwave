@@ -9,10 +9,12 @@
 import { buildDemodTables } from '../dsp/chirp';
 import { renderRangePing, renderTransmission, type ModulationOptions } from '../dsp/modulator';
 import { deriveParams, type Profile, type RadioParams } from '../dsp/profiles';
+import type { ProfileBand } from '../dsp/emitters';
 import { FrameAssembler, type DecodedMessage, type ReceiverPhase } from './frameAssembler';
 import { MIC_CONSTRAINTS, describeTrack, type MicReport } from './hardwareConfig';
 import { checkReceiveSupport } from './secureContext';
 import { spatialAnalyzer } from './directionFinder';
+import { spectrumScanner } from './spectrumScanner';
 
 const WORKLET_URL = `${import.meta.env.BASE_URL}ww-demod.worklet.js`;
 
@@ -53,7 +55,11 @@ export class AcousticEngine {
   private txTimer: number | null = null;
 
   listening = false;
+  scanning = false;
   micReport: MicReport | null = null;
+
+  /** Who currently needs the microphone. The stream closes when this empties. */
+  private micUsers = new Set<'decode' | 'scan'>();
   cb: EngineCallbacks = {};
 
   get sampleRate(): number {
@@ -137,16 +143,15 @@ export class AcousticEngine {
 
   /* -------------------------------- receive ------------------------------ */
 
-  async startListening(profile: Profile): Promise<void> {
+  /**
+   * Open the microphone once and share it. The demodulator and the ambient
+   * scanner both want the same raw stream, and asking for a second one costs
+   * another permission prompt on some browsers - and on others silently
+   * returns a stream with the voice processing switched back on.
+   */
+  private async ensureMic(ctx: AudioContext, user: 'decode' | 'scan'): Promise<MediaStreamAudioSourceNode> {
     const support = checkReceiveSupport();
-    if (!support.ok) throw new Error(support.reason ?? 'Receiving is not supported here.');
-
-    const ctx = await this.ensureContext();
-
-    if (!this.moduleLoaded) {
-      await ctx.audioWorklet.addModule(WORKLET_URL);
-      this.moduleLoaded = true;
-    }
+    if (!support.ok) throw new Error(support.reason ?? 'Microphone access is not supported here.');
 
     if (!this.stream) {
       this.stream = await navigator.mediaDevices.getUserMedia(MIC_CONSTRAINTS);
@@ -165,12 +170,48 @@ export class AcousticEngine {
       this.analyser.smoothingTimeConstant = 0.55;
       this.source.connect(this.analyser);
     }
+    this.micUsers.add(user);
+    return this.source as MediaStreamAudioSourceNode;
+  }
 
-    this.attachWorklet(profile, ctx);
-    if (this.source) {
-      spatialAnalyzer.attach(ctx, this.source);
+  /** Close the stream once nothing is using it any more. */
+  private releaseMic(user: 'decode' | 'scan') {
+    this.micUsers.delete(user);
+    if (this.micUsers.size > 0) return;
+    this.source?.disconnect();
+    this.source = null;
+    this.analyser = null;
+    this.stream?.getTracks().forEach((t) => t.stop());
+    this.stream = null;
+  }
+
+  async startListening(profile: Profile): Promise<void> {
+    const ctx = await this.ensureContext();
+
+    if (!this.moduleLoaded) {
+      await ctx.audioWorklet.addModule(WORKLET_URL);
+      this.moduleLoaded = true;
     }
+
+    const source = await this.ensureMic(ctx, 'decode');
+    this.attachWorklet(profile, ctx);
+    spatialAnalyzer.attach(ctx, source);
     this.listening = true;
+  }
+
+  /** Wideband ambient scan. Independent of decoding - either can run alone. */
+  async startScanning(bands: ProfileBand[]): Promise<void> {
+    const ctx = await this.ensureContext();
+    const source = await this.ensureMic(ctx, 'scan');
+    spectrumScanner.setProfileBands(bands);
+    spectrumScanner.attach(ctx, source);
+    this.scanning = true;
+  }
+
+  stopScanning() {
+    spectrumScanner.detach();
+    this.scanning = false;
+    this.releaseMic('scan');
   }
 
   /** Rebuild the demodulator for a new profile without dropping the mic. */
@@ -277,18 +318,15 @@ export class AcousticEngine {
   stopListening() {
     spatialAnalyzer.detach();
     this.detachWorklet();
-    this.source?.disconnect();
-    this.source = null;
-    this.analyser = null;
-    this.stream?.getTracks().forEach((t) => t.stop());
-    this.stream = null;
     this.assembler = null;
     this.listening = false;
+    this.releaseMic('decode');
   }
 
   dispose() {
     this.stopTransmit();
     this.stopListening();
+    this.stopScanning();
     this.ctx?.close();
     this.ctx = null;
     this.moduleLoaded = false;

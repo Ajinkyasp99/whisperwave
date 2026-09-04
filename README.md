@@ -76,6 +76,55 @@ of all arrival phases.
 a CRC-16 over the payload matches. Thirty seconds of room noise per profile produces
 nothing, which the test suite asserts.
 
+## Scanning the room
+
+The **Scan** tab is a wideband receiver for everything else in the air. A
+high-resolution FFT over the raw microphone covers 0 Hz to Nyquist, every signal that
+persists is tracked frame to frame, and each track is named from how it behaves rather
+than from where it sits: a steady carrier, a duty-cycled beacon, a sweep, an overtone
+of something lower, or broadband noise. Mains hum, a smoke alarm's chirp, an ultrasonic
+motion sensor and a WhisperWave transmission all read differently, and the panel says
+which is which in words.
+
+**The floor is estimated across frequency, not across time.** A temporal average slowly
+swallows any continuous carrier — exactly the signal a scanner exists to find. Each
+block of bins contributes a low percentile, and those anchors are then pooled across a
+neighbourhood of blocks, because a spread-spectrum signal is far wider than one block
+and would otherwise become its own noise floor and vanish.
+
+**Carriers are found by band occupancy, not by peaks.** A chirp sweeps its whole band
+inside one symbol, so over an FFT window it appears as a rippling plateau that
+fragments into a dozen unrelated-looking spikes. What identifies it is that most of one
+profile's band is lit, spread across its full width, and that the band is well above
+the spectrum either side of it — compared in dB, because a loud audible transmission
+splatters weak energy over its neighbours and would defeat any comparison of occupied
+*fractions*. Broadband noise lights every band equally and is rejected on the same test.
+
+**Scan to decode.** When a carrier holds in a profile's band for about a second, the
+scanner retunes the receiver to that profile and starts decoding — so neither end has
+to know in advance which profile the other chose. The sweep mode steps the scope
+through the named bands and parks wherever the squelch breaks, the way a scanner radio
+dwells on a busy channel.
+
+It is an *acoustic* scanner: browsers reach the microphone and nothing else. Radio is
+still reachable second-hand — feed an SDR's demodulated audio into the device's line-in
+and every emitter in it is tracked, classified and translated here like a sound in the
+room.
+
+## Any language, on the fly
+
+Frames carry UTF-8, so the other end can send any language. Each decoded frame — and,
+where the browser offers speech recognition, the room's own speech — is identified as
+it arrives and rendered in the language you chose.
+
+Identification is offline and needs no model: the writing system pins most languages
+outright, marker words and letters separate the ones that share a script (Hindi from
+Marathi from Nepali, Russian from Ukrainian from Serbian, Arabic from Urdu from
+Persian), and Latin script falls back to function-word scoring. Translation uses the
+browser's *on-device* Translator when it exists, so nothing leaves the device; when it
+does not, the language is still named and the original is shown unchanged rather than
+being posted to someone's API.
+
 ## Measured behaviour
 
 `pnpm test` simulates the full path — path loss, multipath, crystal offset, AWGN,
@@ -87,6 +136,11 @@ arrival phase — through the real modulator and the real AudioWorklet DSP:
   and arrival phases spread across the chip
 - 30 s of room noise per profile decodes nothing
 - Reed–Solomon repairs its full error budget and refuses beyond it
+- the scanner's floor estimator survives a 50 dB carrier and a 30 dB tilt, plants no
+  false alarms in pure noise, and keeps a 2.4 kHz spread carrier visible
+- carrier detection fires on a fragmented chirp, and refuses a hand clap, a single
+  whistle inside the band, and silence
+- 20 languages are identified from decoded text without a network
 
 `pnpm test:browser` renders a transmission to a WAV, feeds it to headless Chrome as a
 fake microphone, drives the real UI and waits for the text to appear — exercising the
@@ -104,11 +158,17 @@ src/dsp/
   frame.ts                   header/payload framing, RS + CRC
   reedSolomon.ts, gf256.ts   errors-and-erasures codec over GF(256)
   bits.ts, crc.ts            Gray-coded symbol packing, checksums
+  spectrumScan.ts            noise floor, peak detection, carrier decision
+  emitters.ts                emitter tracking and classification
 src/audio/
   engine.ts                  AudioContext, transmit and receive graphs
   frameAssembler.ts          link layer: symbols to verified messages
   hardwareConfig.ts          microphone constraints
-src/components/              UI, spectrum/waterfall, printable receipt
+  spectrumScanner.ts         wideband scan loop, sweep, carrier hand-off
+src/i18n/
+  detect.ts                  offline language identification
+  translate.ts               on-device Translator bridge, with honest fallbacks
+src/components/              UI, spectrum/waterfall, band scope, printable receipt
 ```
 
 The worklet is plain JavaScript served straight from `public/` so it loads
