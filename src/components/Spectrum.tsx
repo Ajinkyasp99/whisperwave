@@ -186,20 +186,20 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
   const hiFreq = (params.bandHigh + (params.bandHigh - params.bandLow) * 0.75) / 1000;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-inner">
-      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider text-white/60 backdrop-blur-md border border-white/10">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/90 shadow-inner">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 rounded-md bg-black/70 px-2 py-0.5 text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-wider text-white/70 backdrop-blur-md border border-white/10">
         <Activity className="h-3 w-3 accent-text" />
         <span>Live Waterfall & FFT</span>
       </div>
 
-      <canvas ref={canvasRef} className="h-44 w-full sm:h-56 block" />
+      <canvas ref={canvasRef} className="h-36 sm:h-52 w-full block" />
 
-      <div className="num pointer-events-none absolute inset-x-3 bottom-1.5 flex justify-between text-[0.65rem] font-medium text-white/50">
-        <span>{loFreq.toFixed(1)} kHz</span>
-        <span className="accent-text font-bold rounded bg-black/60 px-1.5 py-0.2 border border-white/10">
+      <div className="num pointer-events-none absolute inset-x-2.5 bottom-1.5 flex justify-between text-[0.6rem] sm:text-[0.65rem] font-semibold text-white/50">
+        <span>{loFreq.toFixed(1)}k</span>
+        <span className="accent-text font-black rounded bg-black/70 px-1.5 py-0.2 border border-white/10">
           {(params.bandLow / 1000).toFixed(1)}–{(params.bandHigh / 1000).toFixed(1)} kHz
         </span>
-        <span>{hiFreq.toFixed(1)} kHz</span>
+        <span>{hiFreq.toFixed(1)}k</span>
       </div>
     </div>
   );

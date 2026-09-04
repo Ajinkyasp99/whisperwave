@@ -48,7 +48,7 @@ export function ProfilePicker() {
       <div
         role="radiogroup"
         aria-label="Transmission profile"
-        className="grid grid-cols-2 gap-3 lg:grid-cols-4"
+        className="grid grid-cols-2 gap-2.5 lg:grid-cols-4"
       >
         {PROFILE_ORDER.map((id) => {
           const p = PROFILES[id];
@@ -65,10 +65,10 @@ export function ProfilePicker() {
               data-accent={p.accent}
               disabled={transmitting}
               onClick={() => setProfile(id as ProfileId)}
-              className={`no-tap panel-interactive corner-mark corner-mark-tl corner-mark-br relative overflow-hidden rounded-2xl border p-3.5 sm:p-4 text-left transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`no-tap panel-interactive corner-mark corner-mark-tl corner-mark-br relative overflow-hidden rounded-2xl border p-3 sm:p-4 text-left transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
                 active
-                  ? 'border-white/30 bg-[#0f172a]/90 shadow-2xl ring-1 ring-white/30 neon-glow'
-                  : 'border-white/10 bg-[#080e1c]/60 hover:bg-[#0c1529]/80 hover:border-white/20'
+                  ? 'border-white/30 bg-[#0f172a]/95 shadow-2xl ring-1 ring-white/30 neon-glow'
+                  : 'border-white/10 bg-[#080e1c]/70 hover:bg-[#0c1529]/80 hover:border-white/20'
               }`}
             >
               {/* Dynamic top accent illumination */}
@@ -80,54 +80,52 @@ export function ProfilePicker() {
                 />
               )}
 
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/50 border border-white/10 shadow-inner">
+              <div className="flex items-center justify-between gap-1.5 min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                  <div className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-xl bg-black/50 border border-white/10 shadow-inner">
                     {getProfileIcon(id as ProfileId)}
                   </div>
-                  <div>
-                    <span className={`text-sm sm:text-base font-extrabold ${active ? 'text-white' : 'text-white/85'}`}>
-                      {p.name}
-                    </span>
-                  </div>
+                  <span className={`text-xs sm:text-base font-black truncate ${active ? 'text-white' : 'text-white/85'}`}>
+                    {p.name}
+                  </span>
                 </div>
 
                 <span
-                  className={`rounded-md border px-2 py-0.5 text-[0.6rem] font-extrabold tracking-wider ${badge.bg}`}
+                  className={`shrink-0 rounded px-1.5 py-0.5 text-[0.52rem] sm:text-[0.6rem] font-black tracking-wider border ${badge.bg}`}
                 >
                   {badge.label}
                 </span>
               </div>
 
               {/* Frequencies and Speed Readout */}
-              <div className="num mt-3 flex items-center justify-between text-[0.68rem] text-white/55 border-t border-white/[0.08] pt-2.5">
-                <span className="font-semibold">
-                  {(params.bandLow / 1000).toFixed(1)}–{(params.bandHigh / 1000).toFixed(1)} kHz
+              <div className="num mt-2.5 flex items-center justify-between text-[0.62rem] sm:text-[0.68rem] text-white/55 border-t border-white/[0.08] pt-2">
+                <span className="font-semibold truncate">
+                  {(params.bandLow / 1000).toFixed(1)}–{(params.bandHigh / 1000).toFixed(1)}k
                 </span>
-                <span className="font-extrabold text-cyan-300">
+                <span className="font-extrabold text-cyan-300 shrink-0">
                   {params.bitsPerSecond.toFixed(0)} b/s
                 </span>
               </div>
 
               {/* Range & Tune status */}
-              <div className="mt-2.5 flex items-baseline justify-between">
-                <div className="flex items-baseline gap-1.5">
+              <div className="mt-2 flex items-baseline justify-between">
+                <div className="flex items-baseline gap-1">
                   <span
-                    className="num text-lg font-black leading-none"
+                    className="num text-base sm:text-lg font-black leading-none"
                     style={{ color: active ? 'var(--accent)' : '#f8fafc' }}
                   >
                     {p.rangeLabel}
                   </span>
-                  <span className="text-[0.62rem] text-white/40 uppercase tracking-widest font-bold">RANGE</span>
+                  <span className="text-[0.58rem] sm:text-[0.62rem] text-white/40 uppercase tracking-wider font-bold">RANGE</span>
                 </div>
 
                 {listening && active ? (
-                  <span className="accent-text num text-[0.62rem] font-extrabold uppercase tracking-widest flex items-center gap-1">
+                  <span className="accent-text num text-[0.58rem] sm:text-[0.62rem] font-black uppercase tracking-wider flex items-center gap-1">
                     <span className="h-1.5 w-1.5 rounded-full accent-bg animate-ping" />
                     TUNED
                   </span>
                 ) : (
-                  <span className="text-[0.62rem] text-white/30 num uppercase">SF{params.sf}</span>
+                  <span className="text-[0.58rem] sm:text-[0.62rem] text-white/30 num uppercase">SF{params.sf}</span>
                 )}
               </div>
             </button>

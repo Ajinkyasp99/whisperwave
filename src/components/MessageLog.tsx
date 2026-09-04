@@ -95,18 +95,18 @@ function Row({ m }: { m: Received }) {
       </div>
 
       {/* Message Decoded Text Payload */}
-      <div className="mt-3 text-sm sm:text-base font-semibold leading-relaxed text-white selection:bg-cyan-500/40 break-words font-sans">
+      <div className="mt-2.5 text-sm sm:text-base font-semibold leading-relaxed text-white selection:bg-cyan-500/40 break-words font-sans">
         {m.text}
       </div>
 
       {/* Action Bar */}
-      <div className="no-print mt-3.5 flex flex-wrap items-center gap-2 border-t border-white/[0.06] pt-2.5">
+      <div className="no-print mt-3 flex flex-wrap items-center gap-1.5 sm:gap-2 border-t border-white/[0.06] pt-2.5">
         <Button
           size="sm"
           onClick={copy}
           icon={copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
         >
-          {copied ? 'Copied!' : 'Copy Text'}
+          {copied ? 'Copied!' : 'Copy'}
         </Button>
 
         {canShare && (
@@ -159,14 +159,14 @@ export function MessageLog() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter decoded frames…"
-              className="w-full rounded-xl border border-white/12 bg-black/40 py-2 pl-9 pr-3 text-xs text-white placeholder:text-white/35 focus:border-cyan-400/50 focus:outline-none"
+              className="w-full rounded-xl border border-white/12 bg-black/40 py-2 pl-9 pr-3 text-sm sm:text-xs text-white placeholder:text-white/35 focus:border-cyan-400/50 focus:outline-none"
             />
           </div>
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="text-xs font-bold text-white/60 hover:text-white transition"
+              className="text-xs font-bold text-white/60 hover:text-white transition p-1"
             >
               Clear
             </button>
@@ -175,13 +175,13 @@ export function MessageLog() {
       )}
 
       {messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-          <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/15 shadow-xl">
-            <Radio className="h-7 w-7 accent-text" />
+        <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+          <div className="relative mb-3 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/15 shadow-xl">
+            <Radio className="h-6 w-6 sm:h-7 sm:w-7 accent-text" />
             <span className="ping-ring absolute inset-0 rounded-2xl border border-white/20 opacity-40" />
           </div>
-          <h3 className="text-base font-extrabold text-white">Listening for Incoming Acoustic Frames</h3>
-          <p className="mt-2 max-w-sm text-xs leading-relaxed text-white/50">
+          <h3 className="text-sm sm:text-base font-extrabold text-white">Listening for Incoming Acoustic Frames</h3>
+          <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-white/50">
             Transmissions are automatically captured, demodulated via FFT matched filters, repaired with Reed–Solomon FEC, and verified by CRC-16.
           </p>
         </div>
@@ -191,14 +191,14 @@ export function MessageLog() {
         </p>
       ) : (
         <>
-          <ul className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+          <ul className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
             {filteredMessages.map((m) => (
               <Row key={m.id} m={m} />
             ))}
           </ul>
 
-          <div className="no-print mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] pt-3.5">
-            <div className="flex items-center gap-2">
+          <div className="no-print mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] pt-3">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <Button size="sm" onClick={() => window.print()} icon={<Printer className="h-3.5 w-3.5" />}>
                 Print Receipt
               </Button>

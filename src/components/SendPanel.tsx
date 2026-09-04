@@ -228,21 +228,21 @@ export function SendPanel() {
       <div className="mt-5">
         {transmitting ? (
           <div className="space-y-3">
-            <div className="rounded-2xl border border-rose-500/40 bg-rose-500/15 p-4 shadow-xl neon-glow">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-6 items-end gap-1">
+            <div className="rounded-2xl border border-rose-500/40 bg-rose-500/15 p-3.5 sm:p-4 shadow-xl neon-glow">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <div className="flex h-6 items-end gap-1 shrink-0">
                     <span className="h-full w-1 rounded-full bg-rose-400 wave-anim-1" />
                     <span className="h-full w-1 rounded-full bg-rose-400 wave-anim-2" />
                     <span className="h-full w-1 rounded-full bg-rose-400 wave-anim-3" />
                     <span className="h-full w-1 rounded-full bg-rose-400 wave-anim-4" />
                     <span className="h-full w-1 rounded-full bg-rose-400 wave-anim-5" />
                   </div>
-                  <div>
-                    <div className="text-[0.65rem] font-extrabold uppercase tracking-widest text-rose-300">
-                      EMITTING SOUNDWAVE BURST
+                  <div className="min-w-0">
+                    <div className="text-[0.62rem] sm:text-[0.65rem] font-extrabold uppercase tracking-widest text-rose-300 truncate">
+                      EMITTING SOUND BURST
                     </div>
-                    <div className="num text-base font-black text-white">
+                    <div className="num text-sm sm:text-base font-black text-white truncate">
                       {txLabel.toUpperCase()} · {Math.round(txProgress * 100)}%
                     </div>
                   </div>
@@ -253,6 +253,7 @@ export function SendPanel() {
                   size="md"
                   onClick={stop}
                   icon={<Square className="h-4 w-4 fill-current" />}
+                  className="shrink-0"
                 >
                   ABORT
                 </Button>
@@ -268,7 +269,7 @@ export function SendPanel() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
             <Button
               variant="accent"
               size="lg"
@@ -276,7 +277,7 @@ export function SendPanel() {
               disabled={!draft.trim() || overBudget}
               icon={<Send className="h-4 w-4" />}
               scanline
-              className="flex-1 text-base tracking-wide uppercase"
+              className="w-full flex-1 text-sm sm:text-base font-black tracking-widest uppercase shadow-[0_0_20px_var(--accent-glow)]"
             >
               TRANSMIT WAVEFORM
             </Button>
@@ -285,7 +286,7 @@ export function SendPanel() {
               onClick={ping}
               icon={<Waves className="h-4 w-4" />}
               title="Emit continuous acoustic chirp sequence to test link range"
-              className="text-xs sm:text-sm font-bold uppercase"
+              className="w-full sm:w-auto text-xs sm:text-sm font-bold uppercase"
             >
               Range Test Ping
             </Button>

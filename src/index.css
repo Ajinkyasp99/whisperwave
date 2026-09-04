@@ -111,7 +111,7 @@ textarea, input[type='text'] { font-size: 16px; }
 
 @layer utilities {
   .panel {
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.65) 0%, rgba(8, 14, 26, 0.85) 100%);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(8, 14, 26, 0.9) 100%);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 1.25rem;
     backdrop-filter: blur(24px);
@@ -123,9 +123,26 @@ textarea, input[type='text'] { font-size: 16px; }
     position: relative;
   }
   
+  .glass-card {
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .tactical-border {
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
+  }
+
+  .tactical-glow {
+    box-shadow: 0 0 15px var(--accent-glow);
+  }
+
   .panel-tight {
     border-radius: 0.875rem;
     backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   .panel-interactive {
@@ -157,7 +174,7 @@ textarea, input[type='text'] { font-size: 16px; }
     letter-spacing: -0.02em;
   }
   
-  .safe-b { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .safe-b { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); }
   .safe-t { padding-top: env(safe-area-inset-top, 0px); }
   .no-tap { -webkit-tap-highlight-color: transparent; }
 }

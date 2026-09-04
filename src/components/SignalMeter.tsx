@@ -40,7 +40,7 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
   const phaseInfo = getPhaseDisplay(phase);
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#070e1d]/80 p-4 relative overflow-hidden">
+    <div className="rounded-2xl border border-white/[0.08] bg-[#070e1d]/90 p-3.5 sm:p-4 relative overflow-hidden">
       {/* Background Glow */}
       <div
         className="pointer-events-none absolute -left-10 -bottom-10 h-32 w-32 rounded-full opacity-15 blur-2xl"
@@ -48,12 +48,12 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
         aria-hidden
       />
 
-      <div className="flex flex-col sm:flex-row items-center gap-5">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
         {/* Circular Radar Scope HUD (Stitch Signature) */}
-        <div className="relative flex h-28 w-28 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/60 shadow-inner">
+        <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/60 shadow-inner">
           {/* Concentric Range Rings */}
           <div className="absolute inset-2 rounded-full border border-white/10" />
-          <div className="absolute inset-5 rounded-full border border-white/5" />
+          <div className="absolute inset-4 sm:inset-5 rounded-full border border-white/5" />
           <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/10" />
           <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/10" />
 
@@ -66,19 +66,19 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
           {usable && (
             <>
               <div
-                className="absolute top-4 right-5 h-2 w-2 rounded-full bg-cyan-400 animate-ping"
+                className="absolute top-3.5 sm:top-4 right-4 sm:right-5 h-2 w-2 rounded-full bg-cyan-400 animate-ping"
                 style={{ boxShadow: '0 0 8px #06b6d4' }}
               />
               <div
-                className="absolute top-4 right-5 h-2 w-2 rounded-full bg-cyan-300"
+                className="absolute top-3.5 sm:top-4 right-4 sm:right-5 h-2 w-2 rounded-full bg-cyan-300"
               />
             </>
           )}
 
           {/* Center Target Telemetry Badge */}
-          <div className="relative z-10 flex flex-col items-center justify-center rounded-full bg-[#080f20]/90 px-3 py-1.5 border border-white/25 shadow-lg backdrop-blur-md">
-            <span className="text-[0.55rem] font-bold uppercase tracking-wider text-white/50">SNR</span>
-            <span className="num text-xs font-extrabold text-white">
+          <div className="relative z-10 flex flex-col items-center justify-center rounded-full bg-[#080f20]/95 px-2.5 sm:px-3 py-1 sm:py-1.5 border border-white/25 shadow-lg backdrop-blur-md">
+            <span className="text-[0.52rem] sm:text-[0.55rem] font-bold uppercase tracking-wider text-white/50">SNR</span>
+            <span className="num text-[0.72rem] sm:text-xs font-extrabold text-white">
               {usable ? `+${snrDb.toFixed(0)} dB` : '—'}
             </span>
           </div>
@@ -86,19 +86,19 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
 
         {/* Linear Calibrated Margin Bar & State */}
         <div className="flex-1 w-full min-w-0">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/50">
-              Correlator Processing Gain
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-[0.62rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/50 truncate">
+              Correlator Gain
             </span>
             <span
-              className={`num rounded-full border px-2.5 py-0.5 text-xs font-bold ${quality.badgeBg} ${quality.tone}`}
+              className={`num shrink-0 rounded-full border px-2 sm:px-2.5 py-0.5 text-[0.65rem] sm:text-xs font-bold ${quality.badgeBg} ${quality.tone}`}
             >
               {usable ? `${snrDb.toFixed(1)} dB · ${quality.label}` : quality.label}
             </span>
           </div>
 
           {/* Calibrated Signal Margin Bar */}
-          <div className="relative h-2.5 overflow-hidden rounded-full bg-black/60 border border-white/10">
+          <div className="relative h-2 sm:h-2.5 overflow-hidden rounded-full bg-black/60 border border-white/10">
             <div
               className="h-full rounded-full transition-all duration-200"
               style={{
@@ -116,18 +116,18 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
             />
           </div>
 
-          <div className="mt-1.5 flex justify-between text-[0.62rem] text-white/40 font-medium">
-            <span>Weak (0 dB)</span>
-            <span className="text-white/75 font-bold">▲ +12 dB Decode Threshold</span>
-            <span>Strong (+38 dB)</span>
+          <div className="mt-1.5 flex justify-between text-[0.58rem] sm:text-[0.62rem] text-white/40 font-medium">
+            <span>0 dB</span>
+            <span className="text-white/75 font-bold">▲ +12 dB Decode Min</span>
+            <span>+38 dB</span>
           </div>
 
           {/* Receiver Phase Readout */}
-          <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-2 text-xs">
-            <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-white/40">Receiver State</span>
-            <div className="flex items-center gap-1.5 font-bold text-white">
+          <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.06] pt-2 text-xs">
+            <span className="text-[0.62rem] sm:text-[0.65rem] font-semibold uppercase tracking-wider text-white/40">State</span>
+            <div className="flex items-center gap-1.5 font-bold text-white min-w-0">
               {phaseInfo.icon}
-              <span className="num text-xs">{phaseInfo.label}</span>
+              <span className="num text-[0.68rem] sm:text-xs truncate">{phaseInfo.label}</span>
             </div>
           </div>
         </div>
