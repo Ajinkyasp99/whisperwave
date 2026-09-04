@@ -14,7 +14,7 @@ export function Panel({
 }) {
   return (
     <section
-      className={`panel relative p-4 sm:p-5 transition-all duration-300 ${
+      className={`panel relative p-3.5 sm:p-5 transition-all duration-300 ${
         cornerMarks ? 'corner-mark corner-mark-tl corner-mark-br' : ''
       } ${
         highlight ? 'border-white/25 shadow-2xl neon-glow' : ''
@@ -42,19 +42,19 @@ export function PanelTitle({
   icon?: ReactNode;
 }) {
   return (
-    <header className="mb-4 flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
-      <div className="flex items-center gap-2.5">
+    <header className="mb-3.5 sm:mb-4 flex items-center justify-between gap-2.5 border-b border-white/[0.08] pb-2.5 sm:pb-3">
+      <div className="flex items-center gap-2 min-w-0">
         {icon && (
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.04] border border-white/10 accent-text">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[0.04] border border-white/10 accent-text">
             {icon}
           </div>
         )}
-        <h2 className="text-[0.72rem] font-extrabold uppercase tracking-[0.2em] text-white/80">
+        <h2 className="text-[0.68rem] sm:text-[0.72rem] font-extrabold uppercase tracking-[0.18em] text-white/80 truncate">
           {children}
         </h2>
       </div>
       {hint ? (
-        <span className="num rounded-md bg-white/[0.04] px-2.5 py-0.5 text-[0.68rem] font-bold text-white/60 border border-white/[0.08] tracking-wider">
+        <span className="num shrink-0 rounded-md bg-white/[0.04] px-2 sm:px-2.5 py-0.5 text-[0.62rem] sm:text-[0.68rem] font-bold text-white/60 border border-white/[0.08] tracking-wider">
           {hint}
         </span>
       ) : null}
@@ -74,14 +74,14 @@ export function Stat({
   icon?: ReactNode;
 }) {
   return (
-    <div className="min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.06] p-2.5 sm:p-3 transition-all duration-200 hover:bg-white/[0.06] hover:border-white/15">
-      <div className="flex items-center gap-1.5 truncate text-[0.62rem] font-bold uppercase tracking-[0.16em] text-white/45">
-        {icon && <span className="opacity-75 accent-text">{icon}</span>}
+    <div className="min-w-0 rounded-xl bg-white/[0.03] border border-white/[0.06] p-2 sm:p-2.5 transition-all duration-200 hover:bg-white/[0.06] hover:border-white/15">
+      <div className="flex items-center gap-1 truncate text-[0.58rem] sm:text-[0.62rem] font-bold uppercase tracking-[0.14em] text-white/45">
+        {icon && <span className="opacity-75 accent-text shrink-0">{icon}</span>}
         <span className="truncate">{label}</span>
       </div>
-      <div className="num mt-1 flex items-baseline gap-1 truncate text-sm sm:text-base font-bold text-white">
-        <span>{value}</span>
-        {unit ? <span className="text-[0.68rem] font-normal text-white/45">{unit}</span> : null}
+      <div className="num mt-0.5 sm:mt-1 flex items-baseline gap-1 truncate text-[0.82rem] sm:text-base font-bold text-white">
+        <span className="truncate">{value}</span>
+        {unit ? <span className="text-[0.62rem] sm:text-[0.68rem] font-normal text-white/45 shrink-0">{unit}</span> : null}
       </div>
     </div>
   );
@@ -118,10 +118,10 @@ export function Button({
 
   const sizes =
     size === 'lg'
-      ? 'min-h-[3.25rem] px-6 text-sm sm:text-base tracking-wide'
+      ? 'min-h-[3.25rem] px-5 sm:px-6 text-sm sm:text-base tracking-wide'
       : size === 'sm'
-      ? 'min-h-[2.1rem] px-3 text-xs'
-      : 'min-h-[2.75rem] px-4 text-xs sm:text-sm';
+      ? 'min-h-[2.25rem] px-2.5 sm:px-3 text-xs'
+      : 'min-h-[2.75rem] px-3.5 sm:px-4 text-xs sm:text-sm';
 
   const variants: Record<string, string> = {
     accent:
@@ -151,7 +151,7 @@ export function Button({
       className={`${base} ${sizes} ${variants[variant]} ${scanline ? 'scanline' : ''} ${className}`}
     >
       {icon && <span className="shrink-0">{icon}</span>}
-      <span>{children}</span>
+      <span className="truncate">{children}</span>
     </button>
   );
 }
@@ -176,8 +176,8 @@ export function Slider({
   icon?: ReactNode;
 }) {
   return (
-    <label className="block rounded-xl bg-white/[0.025] border border-white/[0.05] p-3 transition hover:border-white/[0.1] hover:bg-white/[0.04]">
-      <div className="mb-2 flex items-center justify-between">
+    <label className="block rounded-xl bg-white/[0.025] border border-white/[0.05] p-2.5 sm:p-3 transition hover:border-white/[0.1] hover:bg-white/[0.04]">
+      <div className="mb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           {icon && <span className="accent-text opacity-90">{icon}</span>}
           <span className="text-xs font-semibold text-white/75">{label}</span>
@@ -219,7 +219,7 @@ export function Badge({
   return (
     <span
       style={tone === 'accent' ? { background: 'var(--accent)' } : undefined}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[0.68rem] font-bold transition tracking-wide ${tones[tone]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[0.65rem] sm:text-[0.68rem] font-bold transition tracking-wide ${tones[tone]}`}
     >
       {icon && <span className="shrink-0">{icon}</span>}
       <span>{children}</span>
@@ -252,23 +252,23 @@ export function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div
         className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="panel relative z-10 max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-white/20 bg-[#070d1a]/95 p-5 sm:p-6 shadow-2xl neon-glow">
-        <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3.5">
-          <div className="flex items-center gap-2.5">
-            {icon && <span className="accent-text flex items-center">{icon}</span>}
-            <h3 className="text-base sm:text-lg font-bold tracking-tight text-white">{title}</h3>
+      <div className="panel relative z-10 max-h-[88vh] w-full max-w-2xl overflow-y-auto border border-white/20 bg-[#070d1a]/95 p-4 sm:p-6 shadow-2xl neon-glow">
+        <div className="mb-3.5 sm:mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            {icon && <span className="accent-text flex items-center shrink-0">{icon}</span>}
+            <h3 className="text-sm sm:text-lg font-bold tracking-tight text-white truncate">{title}</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
+            className="rounded-lg p-2 text-white/50 transition hover:bg-white/10 hover:text-white"
           >
             <X className="h-5 w-5" />
           </button>

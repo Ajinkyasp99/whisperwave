@@ -32,11 +32,11 @@ export function LinkFacts() {
         Physical Layer Telemetry
       </PanelTitle>
 
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-2.5 sm:grid-cols-3">
         <Stat
           icon={<Waves className="h-3.5 w-3.5" />}
-          label="RF/Acoustic Band"
-          value={`${(params.bandLow / 1000).toFixed(2)}–${(params.bandHigh / 1000).toFixed(2)}`}
+          label="Acoustic Band"
+          value={`${(params.bandLow / 1000).toFixed(1)}–${(params.bandHigh / 1000).toFixed(1)}`}
           unit="kHz"
         />
         <Stat

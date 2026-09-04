@@ -18,9 +18,11 @@ import {
   AlertTriangle,
   Info,
   X,
+  Radio,
 } from 'lucide-react';
 
 const TABS: Array<{ id: Tab; label: string; icon: typeof Send }> = [
+  { id: 'transceiver', label: 'Transceiver', icon: Radio },
   { id: 'send', label: 'Transmit', icon: Send },
   { id: 'listen', label: 'Receive', icon: Mic },
   { id: 'log', label: 'Messages', icon: MessageSquare },
@@ -86,10 +88,10 @@ export default function App() {
 
   return (
     <div data-accent={accent} className="min-h-full flex flex-col justify-between">
-      <div className="mx-auto w-full max-w-6xl px-4 pb-32 lg:pb-12">
+      <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 pb-32 sm:pb-36 lg:pb-12">
         <Header />
 
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           {error && <Banner tone="error" text={error} onDismiss={() => setError(null)} />}
           {notice && <Banner tone="notice" text={notice} onDismiss={() => setNotice(null)} />}
 
@@ -110,7 +112,14 @@ export default function App() {
           </div>
 
           {/* Mobile Tabbed Views */}
-          <div className="no-print space-y-5 lg:hidden">
+          <div className="no-print space-y-4 sm:space-y-5 lg:hidden">
+            {tab === 'transceiver' && (
+              <>
+                <SendPanel />
+                <ListenPanel />
+                <LinkFacts />
+              </>
+            )}
             {tab === 'send' && (
               <>
                 <SendPanel />
@@ -128,8 +137,8 @@ export default function App() {
 
           <Receipt />
 
-          <footer className="no-print pt-8 pb-3 text-center text-[0.7rem] leading-relaxed text-white/40">
-            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-semibold uppercase tracking-wider">
+          <footer className="no-print pt-6 sm:pt-8 pb-3 text-center text-[0.68rem] sm:text-[0.7rem] leading-relaxed text-white/40">
+            <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 font-semibold uppercase tracking-wider">
               <span className="accent-text">Chirp Spread Spectrum (CSS)</span>
               <span>·</span>
               <span className="text-white/70">Reed–Solomon FEC (GF256)</span>
@@ -138,60 +147,58 @@ export default function App() {
               <span>·</span>
               <span className="text-emerald-400">Zero Network Dependency</span>
             </div>
-            <div className="mt-1.5 text-[0.65rem] text-white/30">
+            <div className="mt-1.5 text-[0.62rem] sm:text-[0.65rem] text-white/30">
               WhisperWave transmits digital bytes through sound using physical acoustic correlation.
             </div>
           </footer>
         </div>
       </div>
 
-      {/* Stitch Mobile Bottom Navigation Bar */}
-      <nav className="no-print safe-b fixed inset-x-0 bottom-0 z-50 border-t border-white/15 bg-[#030712]/95 backdrop-blur-2xl lg:hidden shadow-[0_-8px_30px_rgba(0,0,0,0.8)]">
-        <div className="mx-auto flex max-w-md justify-around px-3 py-1.5">
-          {TABS.map((t) => {
-            const active = tab === t.id;
-            const Icon = t.icon;
-            const badge = t.id === 'log' && messages.length > 0 ? messages.length : null;
+      {/* Stitch Mobile Floating Glassmorphic Bottom Navigation Bar */}
+      <nav className="no-print safe-b fixed bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-sm sm:max-w-md z-50 rounded-full bg-[#070e1e]/90 backdrop-blur-2xl border border-cyan-500/30 shadow-[0_8px_32px_rgba(0,0,0,0.85),0_0_20px_rgba(6,182,212,0.15)] lg:hidden p-1.5 flex justify-around items-center">
+        {TABS.map((t) => {
+          const active = tab === t.id;
+          const Icon = t.icon;
+          const badge = t.id === 'log' && messages.length > 0 ? messages.length : null;
 
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                aria-current={active ? 'page' : undefined}
-                className={`no-tap relative flex flex-1 flex-col items-center justify-center py-2 text-xs font-bold transition-all duration-200 active:scale-95 ${
-                  active ? 'text-white' : 'text-white/45 hover:text-white/75'
-                }`}
-              >
-                {active && (
-                  <div
-                    className="absolute inset-x-3 inset-y-1 rounded-2xl bg-white/[0.08] border border-white/15 neon-glow -z-10"
-                    style={{
-                      borderColor: 'var(--accent)',
-                    }}
-                  />
-                )}
-                <div className="relative">
-                  <Icon
-                    className="h-5 w-5 mb-0.5"
-                    style={{ color: active ? 'var(--accent)' : undefined }}
-                  />
-                  {badge && (
-                    <span className="num absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-400 px-1 text-[0.58rem] font-black text-slate-950 shadow-md">
-                      {badge}
-                    </span>
-                  )}
-                </div>
-                <span
-                  className="text-[0.68rem] tracking-wider uppercase"
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              aria-current={active ? 'page' : undefined}
+              className={`no-tap relative flex flex-1 flex-col items-center justify-center py-1.5 text-xs font-bold transition-all duration-200 active:scale-95 rounded-full ${
+                active ? 'text-white' : 'text-white/45 hover:text-white/75'
+              }`}
+            >
+              {active && (
+                <div
+                  className="absolute inset-0 rounded-full bg-white/[0.08] border border-white/20 neon-glow -z-10"
+                  style={{
+                    borderColor: 'var(--accent)',
+                  }}
+                />
+              )}
+              <div className="relative">
+                <Icon
+                  className="h-4 w-4 sm:h-5 sm:w-5 mb-0.5"
                   style={{ color: active ? 'var(--accent)' : undefined }}
-                >
-                  {t.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                />
+                {badge && (
+                  <span className="num absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-400 px-1 text-[0.55rem] font-black text-slate-950 shadow-md">
+                    {badge}
+                  </span>
+                )}
+              </div>
+              <span
+                className="text-[0.62rem] sm:text-[0.68rem] tracking-wider uppercase"
+                style={{ color: active ? 'var(--accent)' : undefined }}
+              >
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
       </nav>
 
       {/* Interactive Modals */}

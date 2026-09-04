@@ -94,6 +94,20 @@ export function DiagnosticsModal({ isOpen, onClose }: { isOpen: boolean; onClose
                 {micReport?.echoCancellation || micReport?.noiseSuppression ? 'Warning: Active' : 'Bypassed (Clean)'}
               </div>
             </div>
+
+            <div className="rounded-lg bg-black/30 p-2.5 border border-white/[0.05]">
+              <div className="text-[0.65rem] text-white/40 uppercase">Spatial DOA Engine</div>
+              <div className="mt-1 text-xs font-semibold text-cyan-300">
+                Acoustic Phase Correlator
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-black/30 p-2.5 border border-white/[0.05]">
+              <div className="text-[0.65rem] text-white/40 uppercase">Full Duplex Mode</div>
+              <div className="mt-1 text-xs font-semibold text-emerald-300">
+                Simultaneous TX/RX Active
+              </div>
+            </div>
           </div>
         </div>
       </div>
