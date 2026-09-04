@@ -11,6 +11,8 @@ export interface Received extends DecodedMessage {
 
 export type Tab = 'send' | 'listen' | 'log';
 
+export type ModalType = 'guide' | 'diagnostics' | null;
+
 interface State {
   profileId: ProfileId;
   volume: number;
@@ -34,6 +36,10 @@ interface State {
   error: string | null;
   sampleRate: number;
 
+  soundAlerts: boolean;
+  activeModal: ModalType;
+  searchQuery: string;
+
   setProfile: (id: ProfileId) => void;
   setVolume: (v: number) => void;
   setDrive: (v: number) => void;
@@ -49,6 +55,9 @@ interface State {
   setNotice: (t: string | null) => void;
   setError: (t: string | null) => void;
   setSampleRate: (r: number) => void;
+  setSoundAlerts: (on: boolean) => void;
+  setActiveModal: (m: ModalType) => void;
+  setSearchQuery: (q: string) => void;
 }
 
 export const useStore = create<State>((set) => ({
@@ -73,6 +82,10 @@ export const useStore = create<State>((set) => ({
   notice: null,
   error: null,
   sampleRate: 48000,
+
+  soundAlerts: true,
+  activeModal: null,
+  searchQuery: '',
 
   setProfile: (profileId) => set({ profileId }),
   setVolume: (volume) => set({ volume }),
@@ -104,6 +117,9 @@ export const useStore = create<State>((set) => ({
   setNotice: (notice) => set({ notice }),
   setError: (error) => set({ error }),
   setSampleRate: (sampleRate) => set({ sampleRate }),
+  setSoundAlerts: (soundAlerts) => set({ soundAlerts }),
+  setActiveModal: (activeModal) => set({ activeModal }),
+  setSearchQuery: (searchQuery) => set({ searchQuery }),
 }));
 
 export const profileOf = (id: ProfileId) => PROFILES[id];

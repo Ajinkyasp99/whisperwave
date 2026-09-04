@@ -3,6 +3,9 @@ import { engine } from '../audio/engine';
 import { PROFILES } from '../dsp/profiles';
 import { useStore } from '../store/useStore';
 
+import confetti from 'canvas-confetti';
+import { playReceiptChime } from '../utils/audioChime';
+
 /** Wire the audio engine's callbacks into the store, once, for the app's life. */
 export function useEngineBridge() {
   useEffect(() => {
@@ -16,7 +19,25 @@ export function useEngineBridge() {
         if (f >= 1) useStore.getState().setTransmitting(false);
       },
       onMessage: (m) => {
-        useStore.getState().addMessage(m);
+        const state = useStore.getState();
+        state.addMessage(m);
+
+        if (state.soundAlerts) {
+          playReceiptChime();
+        }
+
+        try {
+          confetti({
+            particleCount: 40,
+            spread: 60,
+            origin: { y: 0.8 },
+            colors: ['#06b6d4', '#a855f7', '#10b981', '#f59e0b', '#ffffff'],
+            disableForReducedMotion: true,
+          });
+        } catch {
+          // ignore confetti errors in non-browser or test contexts
+        }
+
         // A short buzz is the only feedback that works when the phone is
         // across the room and the profile is inaudible.
         if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([18, 40, 18]);

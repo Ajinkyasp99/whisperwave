@@ -4,3 +4,6 @@ dist-ssr
 *.local
 .DS_Store
 .vite
+.agents
+.agents/
+mcp_config.json
