@@ -18,9 +18,11 @@ import {
   AlertTriangle,
   Info,
   X,
+  Radio,
 } from 'lucide-react';
 
 const TABS: Array<{ id: Tab; label: string; icon: typeof Send }> = [
+  { id: 'transceiver', label: 'Transceiver', icon: Radio },
   { id: 'send', label: 'Transmit', icon: Send },
   { id: 'listen', label: 'Receive', icon: Mic },
   { id: 'log', label: 'Messages', icon: MessageSquare },
@@ -111,6 +113,13 @@ export default function App() {
 
           {/* Mobile Tabbed Views */}
           <div className="no-print space-y-4 sm:space-y-5 lg:hidden">
+            {tab === 'transceiver' && (
+              <>
+                <SendPanel />
+                <ListenPanel />
+                <LinkFacts />
+              </>
+            )}
             {tab === 'send' && (
               <>
                 <SendPanel />

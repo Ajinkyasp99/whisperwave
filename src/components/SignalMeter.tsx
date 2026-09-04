@@ -1,11 +1,36 @@
-import { Radio, Radar, ShieldCheck, Activity, AlertCircle } from 'lucide-react';
+import { useDirectionFinder } from '../hooks/useDirectionFinder';
+import { Radio, Radar, ShieldCheck, Activity, AlertCircle, Compass, Navigation } from 'lucide-react';
+
+function getCardinalDirection(deg: number): string {
+  const norm = ((deg % 360) + 360) % 360;
+  if (norm >= 337.5 || norm < 22.5) return 'N';
+  if (norm >= 22.5 && norm < 67.5) return 'NE';
+  if (norm >= 67.5 && norm < 112.5) return 'E';
+  if (norm >= 112.5 && norm < 157.5) return 'SE';
+  if (norm >= 157.5 && norm < 202.5) return 'S';
+  if (norm >= 202.5 && norm < 247.5) return 'SW';
+  if (norm >= 247.5 && norm < 292.5) return 'W';
+  return 'NW';
+}
 
 /**
- * Stitch Radar & Link Margin Meter.
+ * Stitch Spatial Radar & Link Margin Meter with Acoustic Direction Finding (DOA).
  *
- * Combines a high-tech circular radar scope with the correlator's processing gain meter.
+ * Shows the real-time Direction of Arrival (DOA) of incoming acoustic/voice signals
+ * combined with phone compass orientation and correlator gain.
  */
 export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) {
+  const {
+    bearing,
+    confidence,
+    compassHeading,
+    compassSupported,
+    compassActive,
+    isStereo,
+    listening,
+    requestCompassPermission,
+  } = useDirectionFinder();
+
   const usable = Number.isFinite(snrDb) && snrDb > -50;
   const pct = usable ? Math.max(0, Math.min(1, (snrDb - 4) / 34)) : 0;
 
@@ -23,7 +48,7 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
   const getPhaseDisplay = (p: string) => {
     switch (p) {
       case 'searching':
-        return { label: 'Searching for Preamble Chirp', icon: <Radar className="h-3.5 w-3.5 animate-radar text-cyan-400" /> };
+        return { label: 'Scanning for Preamble Chirp', icon: <Radar className="h-3.5 w-3.5 animate-radar text-cyan-400" /> };
       case 'preamble':
         return { label: 'Preamble Lock Detected', icon: <Radio className="h-3.5 w-3.5 text-amber-400 animate-pulse" /> };
       case 'header':
@@ -38,6 +63,14 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
   };
 
   const phaseInfo = getPhaseDisplay(phase);
+  const cardinal = getCardinalDirection(bearing);
+  const hasDirectionLock = listening && (usable || confidence > 0.25);
+
+  // Position of DOA blip on the radar circle (radius = 38px)
+  const blipRadius = 38;
+  const angleRad = ((bearing - 90) * Math.PI) / 180;
+  const blipX = Math.cos(angleRad) * blipRadius;
+  const blipY = Math.sin(angleRad) * blipRadius;
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-[#070e1d]/90 p-3.5 sm:p-4 relative overflow-hidden">
@@ -49,49 +82,89 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
       />
 
       <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
-        {/* Circular Radar Scope HUD (Stitch Signature) */}
-        <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center rounded-full border border-white/20 bg-black/60 shadow-inner">
-          {/* Concentric Range Rings */}
-          <div className="absolute inset-2 rounded-full border border-white/10" />
-          <div className="absolute inset-4 sm:inset-5 rounded-full border border-white/5" />
-          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/10" />
-          <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/10" />
+        {/* Circular Radar Scope HUD with Spatial Direction of Arrival */}
+        <div className="relative flex h-28 w-28 sm:h-32 sm:w-32 shrink-0 items-center justify-center rounded-full border border-cyan-500/30 bg-black/75 shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+          {/* Compass Axis Cardinal Markers */}
+          <span className="absolute top-1 text-[0.55rem] font-black text-cyan-300">N</span>
+          <span className="absolute right-1 text-[0.55rem] font-bold text-white/40">E</span>
+          <span className="absolute bottom-1 text-[0.55rem] font-bold text-white/40">S</span>
+          <span className="absolute left-1 text-[0.55rem] font-bold text-white/40">W</span>
 
-          {/* Rotating Radar Sweep */}
+          {/* Concentric Range Rings */}
+          <div className="absolute inset-2.5 rounded-full border border-cyan-500/20" />
+          <div className="absolute inset-5 rounded-full border border-cyan-500/10" />
+          <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-cyan-500/20" />
+          <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-cyan-500/20" />
+
+          {/* 360 Radar Sweep Beam */}
           {phase !== 'stopped' && (
-            <div className="absolute inset-0 rounded-full radar-sweep opacity-75" />
+            <div className="absolute inset-0 rounded-full radar-sweep opacity-70" />
           )}
 
-          {/* Active Blips */}
-          {usable && (
+          {/* Direction of Arrival (DOA) Vector Beam & Sector */}
+          {hasDirectionLock && (
             <>
+              {/* Directional Sector Cone */}
               <div
-                className="absolute top-3.5 sm:top-4 right-4 sm:right-5 h-2 w-2 rounded-full bg-cyan-400 animate-ping"
-                style={{ boxShadow: '0 0 8px #06b6d4' }}
+                className="absolute inset-0 rounded-full pointer-events-none transition-transform duration-300"
+                style={{
+                  transform: `rotate(${bearing}deg)`,
+                  background:
+                    'conic-gradient(from -20deg, transparent 0deg, rgba(6, 182, 212, 0.4) 20deg, transparent 40deg)',
+                }}
               />
+
+              {/* Direction Indicator Vector Line */}
               <div
-                className="absolute top-3.5 sm:top-4 right-4 sm:right-5 h-2 w-2 rounded-full bg-cyan-300"
+                className="absolute inset-x-0 top-1/2 h-0.5 pointer-events-none origin-center transition-transform duration-300"
+                style={{
+                  transform: `rotate(${bearing - 90}deg)`,
+                  background: 'linear-gradient(90deg, transparent 50%, var(--accent) 100%)',
+                  boxShadow: '0 0 10px var(--accent)',
+                }}
               />
+
+              {/* Direction Target Lock Blip */}
+              <div
+                className="absolute h-3 w-3 rounded-full bg-cyan-400 pointer-events-none shadow-[0_0_12px_#06b6d4] transition-all duration-300 flex items-center justify-center"
+                style={{
+                  transform: `translate(${blipX}px, ${blipY}px)`,
+                }}
+              >
+                <div className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+              </div>
             </>
           )}
 
           {/* Center Target Telemetry Badge */}
-          <div className="relative z-10 flex flex-col items-center justify-center rounded-full bg-[#080f20]/95 px-2.5 sm:px-3 py-1 sm:py-1.5 border border-white/25 shadow-lg backdrop-blur-md">
-            <span className="text-[0.52rem] sm:text-[0.55rem] font-bold uppercase tracking-wider text-white/50">SNR</span>
-            <span className="num text-[0.72rem] sm:text-xs font-extrabold text-white">
-              {usable ? `+${snrDb.toFixed(0)} dB` : '—'}
+          <div className="relative z-10 flex flex-col items-center justify-center rounded-full bg-[#080f20]/95 px-2.5 py-1 border border-white/25 shadow-lg backdrop-blur-md">
+            <span className="text-[0.52rem] font-bold uppercase tracking-wider text-white/50">
+              {hasDirectionLock ? cardinal : 'SNR'}
+            </span>
+            <span className="num text-[0.7rem] sm:text-xs font-black text-white">
+              {usable ? `+${snrDb.toFixed(0)}dB` : hasDirectionLock ? `${bearing}°` : '—'}
             </span>
           </div>
         </div>
 
-        {/* Linear Calibrated Margin Bar & State */}
+        {/* Direction Readout & Processing Gain Bar */}
         <div className="flex-1 w-full min-w-0">
+          {/* Direction of Arrival Telemetry Header */}
           <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-[0.62rem] sm:text-[0.68rem] font-bold uppercase tracking-[0.16em] text-white/50 truncate">
-              Correlator Gain
-            </span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Navigation
+                className={`h-3.5 w-3.5 transition-transform duration-300 shrink-0 ${
+                  hasDirectionLock ? 'text-cyan-400' : 'text-white/40'
+                }`}
+                style={{ transform: `rotate(${bearing}deg)` }}
+              />
+              <span className="text-[0.62rem] sm:text-[0.68rem] font-black uppercase tracking-[0.16em] text-white/80 truncate">
+                Sound Direction: <span className="accent-text num">{bearing.toString().padStart(3, '0')}° {cardinal}</span>
+              </span>
+            </div>
+
             <span
-              className={`num shrink-0 rounded-full border px-2 sm:px-2.5 py-0.5 text-[0.65rem] sm:text-xs font-bold ${quality.badgeBg} ${quality.tone}`}
+              className={`num shrink-0 rounded-full border px-2 sm:px-2.5 py-0.5 text-[0.62rem] sm:text-xs font-bold ${quality.badgeBg} ${quality.tone}`}
             >
               {usable ? `${snrDb.toFixed(1)} dB · ${quality.label}` : quality.label}
             </span>
@@ -122,12 +195,34 @@ export function SignalMeter({ snrDb, phase }: { snrDb: number; phase: string }) 
             <span>+38 dB</span>
           </div>
 
-          {/* Receiver Phase Readout */}
-          <div className="mt-2.5 flex items-center justify-between border-t border-white/[0.06] pt-2 text-xs">
-            <span className="text-[0.62rem] sm:text-[0.65rem] font-semibold uppercase tracking-wider text-white/40">State</span>
+          {/* Spatial Tracker Status & Receiver State */}
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1.5 border-t border-white/[0.06] pt-2 text-xs">
             <div className="flex items-center gap-1.5 font-bold text-white min-w-0">
               {phaseInfo.icon}
               <span className="num text-[0.68rem] sm:text-xs truncate">{phaseInfo.label}</span>
+            </div>
+
+            {/* Compass / Stereo Mic DOA Pill */}
+            <div className="flex items-center gap-1.5">
+              {compassSupported && !compassActive ? (
+                <button
+                  type="button"
+                  onClick={requestCompassPermission}
+                  className="flex items-center gap-1 rounded bg-cyan-500/10 px-2 py-0.5 text-[0.58rem] font-bold text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all active:scale-95"
+                >
+                  <Compass className="h-2.5 w-2.5" />
+                  <span>Enable Compass</span>
+                </button>
+              ) : compassActive ? (
+                <span className="num flex items-center gap-1 rounded bg-emerald-500/10 px-2 py-0.5 text-[0.58rem] font-bold text-emerald-300 border border-emerald-500/30">
+                  <Compass className="h-2.5 w-2.5 animate-spin" style={{ animationDuration: '8s' }} />
+                  <span>Compass Head: {compassHeading}°</span>
+                </span>
+              ) : (
+                <span className="num rounded bg-white/[0.04] px-1.5 py-0.5 text-[0.58rem] font-bold text-white/50 border border-white/10">
+                  {isStereo ? 'Stereo Phase DOA' : 'Acoustic Phase DOA'}
+                </span>
+              )}
             </div>
           </div>
         </div>

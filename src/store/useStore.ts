@@ -9,7 +9,7 @@ export interface Received extends DecodedMessage {
   profileId: ProfileId;
 }
 
-export type Tab = 'send' | 'listen' | 'log';
+export type Tab = 'transceiver' | 'send' | 'listen' | 'log';
 
 export type ModalType = 'guide' | 'diagnostics' | null;
 
@@ -31,6 +31,10 @@ interface State {
   level: number;
   progress: FrameProgress | null;
 
+  soundBearing: number;
+  soundConfidence: number;
+  compassHeading: number | null;
+
   messages: Received[];
   notice: string | null;
   error: string | null;
@@ -50,6 +54,8 @@ interface State {
   setListening: (on: boolean) => void;
   setMetrics: (m: { phase: ReceiverPhase; snrDb: number; noiseDb: number; level: number }) => void;
   setProgress: (p: FrameProgress | null) => void;
+  setSoundDirection: (bearing: number, confidence: number) => void;
+  setCompassHeading: (heading: number | null) => void;
   addMessage: (m: DecodedMessage) => void;
   clearMessages: () => void;
   setNotice: (t: string | null) => void;
@@ -65,7 +71,7 @@ export const useStore = create<State>((set) => ({
   volume: 0.9,
   drive: 2.2,
   draft: '',
-  tab: 'send',
+  tab: 'transceiver',
 
   transmitting: false,
   txProgress: 0,
@@ -77,6 +83,10 @@ export const useStore = create<State>((set) => ({
   noiseDb: -99,
   level: 0,
   progress: null,
+
+  soundBearing: 45,
+  soundConfidence: 0,
+  compassHeading: null,
 
   messages: [],
   notice: null,
@@ -95,9 +105,11 @@ export const useStore = create<State>((set) => ({
   setTransmitting: (transmitting, txLabel = '') => set({ transmitting, txLabel, txProgress: 0 }),
   setTxProgress: (txProgress) => set({ txProgress }),
   setListening: (listening) =>
-    set(listening ? { listening } : { listening, phase: 'searching', progress: null, snrDb: -99 }),
+    set(listening ? { listening } : { listening, phase: 'searching', progress: null, snrDb: -99, soundConfidence: 0 }),
   setMetrics: ({ phase, snrDb, noiseDb, level }) => set({ phase, snrDb, noiseDb, level }),
   setProgress: (progress) => set({ progress }),
+  setSoundDirection: (soundBearing, soundConfidence) => set({ soundBearing, soundConfidence }),
+  setCompassHeading: (compassHeading) => set({ compassHeading }),
   addMessage: (m) =>
     set((s) => {
       // The same frame is sent several times; suppress an identical repeat that

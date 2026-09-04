@@ -12,6 +12,7 @@ import { deriveParams, type Profile, type RadioParams } from '../dsp/profiles';
 import { FrameAssembler, type DecodedMessage, type ReceiverPhase } from './frameAssembler';
 import { MIC_CONSTRAINTS, describeTrack, type MicReport } from './hardwareConfig';
 import { checkReceiveSupport } from './secureContext';
+import { spatialAnalyzer } from './directionFinder';
 
 const WORKLET_URL = `${import.meta.env.BASE_URL}ww-demod.worklet.js`;
 
@@ -166,6 +167,9 @@ export class AcousticEngine {
     }
 
     this.attachWorklet(profile, ctx);
+    if (this.source) {
+      spatialAnalyzer.attach(ctx, this.source);
+    }
     this.listening = true;
   }
 
@@ -173,6 +177,9 @@ export class AcousticEngine {
   retune(profile: Profile) {
     if (!this.listening || !this.ctx) return;
     this.attachWorklet(profile, this.ctx);
+    if (this.source) {
+      spatialAnalyzer.attach(this.ctx, this.source);
+    }
   }
 
   private attachWorklet(profile: Profile, ctx: AudioContext) {
@@ -268,6 +275,7 @@ export class AcousticEngine {
   }
 
   stopListening() {
+    spatialAnalyzer.detach();
     this.detachWorklet();
     this.source?.disconnect();
     this.source = null;
