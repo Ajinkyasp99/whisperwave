@@ -1,0 +1,186 @@
+Here is the **Final, Comprehensive PRD** for your project, updated to include a dedicated strategy for **increasing transmission distance**. 
+
+To achieve longer distances using sound, we must overcome physical limitations like signal attenuation (sound fading over distance), multipath interference (echoes), and background noise. The PRD below integrates advanced acoustic engineering techniques like **Chirp Spread Spectrum (CSS)**, **Forward Error Correction (FEC)**, and **Cross-Correlation** to maximize range.
+
+---
+
+# 📄 FINAL PRD: WhisperWave 
+### Long-Range & Stealth Acoustic Data Transmission Web App
+
+## 1. Project Identity
+* **Recommended Name:** **WhisperWave** (Alternative: *SonicBridge*, *EchoLink*)
+* **Tagline:** "Data through the air, no networks required."
+* **Core Premise:** A web application that encodes text/data into sound waves, transmits it through standard device speakers, and decodes it via another device's microphone, supporting both "stealth" (near-inaudible) and "long-range" transmission modes.
+
+---
+
+## 2. Problem Statement
+Current device-to-device communication relies on Wi-Fi, Bluetooth, or NFC, which require network infrastructure, pairing protocols, or specific hardware chips. 
+Acoustic data transfer provides an infrastructure-free fallback channel. However, standard audio transmission struggles with **distance, echoes, and ambient noise**. This project aims to build a browser-based proof-of-concept that pushes the physical limits of standard laptop/phone speakers to transmit data reliably over extended distances (3 to 10+ meters).
+
+---
+
+## 3. Product Goals
+1. **Zero-Infrastructure Transfer:** Send text from Device A to Device B using only speakers and microphones.
+2. **Distance Optimization:** Maximize the reliable transmission range using advanced digital signal processing (DSP).
+3. **Frequency Agility:** Allow users to toggle between "Stealth Mode" (high frequency, short range) and "Long-Range Mode" (lower frequency, highly robust).
+4. **Error Resilience:** Ensure messages are reconstructed perfectly even if 30% of the audio signal is lost to distance or noise.
+5. **Exportability:** Display and print the decoded message as a verified receipt.
+
+---
+
+## 4. Target Users
+* IoT Developers testing offline mesh networks.
+* Security researchers exploring acoustic side-channel attacks/covert channels.
+* Hackathon participants building offline-peer-to-peer apps.
+* Users in restricted environments (e.g., Faraday cages, areas with jammed RF signals).
+
+---
+
+## 5. The "Distance & Physics" Reality Check (Crucial for Devs)
+To increase distance, you must understand the **Acoustic Trade-off Triangle**:
+1. **High Frequencies (16kHz - 20kHz):** Highly directional, easily blocked by objects, attenuates (fades) very fast over distance. *Good for stealth, bad for distance.*
+2. **Low Frequencies (2kHz - 8kHz):** Travels much further, bends around obstacles. *Good for distance, bad for stealth (highly audible).*
+3. **Hardware Limits:** Browser volume caps and physical smartphone/laptop speakers limit output power.
+
+**The Solution:** To increase distance without external amplifiers, we will use **Spread Spectrum Modulation** and **Forward Error Correction (FEC)** rather than just turning up the volume.
+
+---
+
+## 6. Core Technical Strategy for Increasing Distance
+
+To maximize range, the app will move beyond simple FSK (Frequency Shift Keying) and implement the following:
+
+### A. Modulation: Chirp Spread Spectrum (CSS)
+Instead of playing a single static tone for a '1' or '0', the app will play a "chirp" (a tone that sweeps up or down in frequency over time). 
+* **Why it increases distance:** Chirps are highly resistant to echoes (multipath interference) and background noise. The receiver can detect a chirp even if its volume is lower than the ambient room noise (similar to how radar or LoRa RF works).
+
+### B. Forward Error Correction (FEC)
+Over long distances, packets will drop or corrupt. 
+* **Implementation:** Use **Reed-Solomon** or **Hamming Codes**.
+* **How it works:** If you send a 10-byte message, the algorithm adds 5 redundant bytes. Even if 30% of the sound is lost to distance, the mathematical algorithm on the receiver perfectly reconstructs the original text.
+
+### C. Cross-Correlation for Sync Detection
+Standard tone detection fails at a distance because the audio gets muddy. 
+* **Implementation:** Use Cross-Correlation to find the exact start of the message (Preamble). It compares the incoming audio against a known "sync pattern" and triggers decoding only when a high mathematical match is found.
+
+### D. Adaptive Gain & Volume Boosting
+* **Software AGC (Automatic Gain Control):** Dynamically boost quiet incoming microphone signals.
+* **Wave Shaping:** Ensure the outgoing audio wave is a square wave or heavily compressed sine wave to maximize acoustic energy output from small speakers.
+
+---
+
+## 7. Functional Requirements
+
+| ID | Feature | Description | Distance Impact |
+|---|---|---|---|
+| FR-01 | **Distance Presets** | UI toggle between "Stealth (1-2m)", "Standard (3-5m)", and "Long-Range (5-15m)". | Changes frequency bands and baud rate. |
+| FR-02 | **CSS Modulation Engine** | Generates frequency "chirps" instead of static tones. | Massive increase in noise/distance resilience. |
+| FR-03 | **FEC Encoding/Decoding** | Wraps payload in Reed-Solomon error correction. | Recovers data lost over long distances. |
+| FR-04 | **Ping / Range Test** | Sends a continuous test signal while showing a "Signal Quality / SNR" meter. | Helps users physically align speakers/mics for max range. |
+| FR-05 | **Multi-Packet Redundancy** | Sends the same message 3 times consecutively. | Ensures at least one packet survives the distance. |
+| FR-06 | **Print & Export** | Browser `window.print()` formatted receipt of the decoded data. | N/A (Standard feature). |
+| FR-07 | **Hardware Constraints Override** | Disables browser `noiseSuppression` and `echoCancellation`. | Prevents the browser from deleting distant, quiet audio signals. |
+
+---
+
+## 8. Transmission Modes (The Distance Profiles)
+
+The app will feature three distinct modes to balance stealth and distance:
+
+| Mode | Frequency Band | Baud Rate | Max Range (Est.) | Use Case |
+|---|---|---|---|---|
+| **Stealth (Near-Ultrasonic)** | 17.5 kHz – 19.5 kHz | Fast | 1 - 2 Meters | Passing data secretly in a quiet room. |
+| **Standard (Mid-Range)** | 8 kHz – 14 kHz | Medium | 3 - 5 Meters | General desk-to-desk transfer. |
+| **Long-Range (Robust)** | 2 kHz – 6 kHz | Very Slow | **5 - 15+ Meters** | Cross-room transmission, overcoming obstacles. (Highly audible). |
+
+---
+
+## 9. Recommended Technology Stack (Final)
+
+### Frontend Architecture
+* **Framework:** React + Vite + TypeScript
+* **Styling:** Tailwind CSS + Radix UI (for clean, accessible sliders and toggles)
+* **State Management:** Zustand
+
+### Audio & DSP Engine (The Core)
+* **Web Audio API:** For generating oscillators and capturing mic streams.
+* **AudioWorklet API:** *Mandatory.* Runs audio processing on a separate thread to prevent UI lag during heavy DSP math.
+* **Meyda.js:** (Optional) Excellent JS library for real-time audio feature extraction (RMS, Spectral Centroid) to help build the Signal Quality meter.
+
+### Mathematical Libraries (For Distance)
+* **`reedsolomon` (npm package) or Custom Galois Field math:** For Forward Error Correction.
+* **`kissfft` (compiled to WebAssembly) or `fft.js`:** For Fast Fourier Transform (needed for spectrum visualization and cross-correlation).
+
+### Printing
+* Native `window.print()` with CSS `@media print` rules to hide the UI and only print the decoded message and timestamp.
+
+---
+
+## 10. Suggested Folder Structure
+
+```text
+src/
+  components/
+    Dashboard/         # Main UI, Signal Meter, Distance Mode Selector
+    ReceiptPrinter/    # Printable view of decoded messages
+  dsp/                 # Digital Signal Processing (The Brains)
+    modulator.ts       # Generates CSS chirps / FSK tones
+    demodulator.ts     # AudioWorklet logic for detecting chirps
+    crossCorrelation.ts# Finds the start of the packet in noisy audio
+    fec.ts             # Reed-Solomon encode/decode
+  audio/
+    hardwareConfig.ts  # Mic constraints (echoCancellation: false)
+  utils/
+    crc.ts             # Checksums
+    mathHelpers.ts     # Fast math for AudioWorklets
+```
+
+---
+
+## 11. Step-by-Step Implementation Roadmap
+
+### Phase 1: The Acoustic Baseline (Week 1-2)
+* Implement basic Web Audio API generation and microphone capture.
+* Build 2-FSK (two tones) encoder/decoder.
+* *Goal:* Successfully transmit "Hello" across a desk (1 meter) in a quiet room.
+
+### Phase 2: The Distance Upgrade (Week 3-4)
+* Implement **AudioWorklet** to move decoding off the main thread.
+* Disable browser noise suppression (`getUserMedia` constraints).
+* Implement **Cross-Correlation** to find the packet start accurately.
+* *Goal:* Successfully transmit across a noisy room (3 meters).
+
+### Phase 3: The Long-Range Protocol (Week 5-6)
+* Implement **Chirp Spread Spectrum (CSS)** modulation.
+* Add **Reed-Solomon Forward Error Correction**.
+* Add the "Long-Range Mode" (2kHz - 6kHz) with slow baud rates.
+* *Goal:* Transmit 50 bytes of text from one end of a large room/hallway to another (5+ meters) with 100% accuracy.
+
+### Phase 4: UI, Polish, and Print (Week 7)
+* Build the visual Signal-to-Noise Ratio (SNR) meter.
+* Implement the printable receipt UI.
+* Final testing on iOS Safari, Chrome Desktop, and Android.
+
+---
+
+## 12. Risks & Mitigations
+
+| Risk | Impact on Distance | Mitigation Strategy |
+|---|---|---|
+| **Multipath Interference (Echoes)** | Destructive interference cancels out sound waves over distance. | Use **Chirp Spread Spectrum (CSS)**. Chirps are naturally immune to echoes. |
+| **Browser Noise Suppression** | Browser thinks distant data tones are "background noise" and deletes them. | Strictly enforce `echoCancellation: false, noiseSuppression: false` in `getUserMedia`. |
+| **Doppler Effect / Movement** | Moving devices shift the frequency, breaking decoding. | Add frequency tolerance margins in the demodulator; instruct users to keep devices stationary for long-range. |
+| **Hardware Speaker Limits** | Phone speakers physically cannot output high-volume low frequencies. | Rely on CSS and FEC rather than just "turning up the volume". Use resonant frequencies of standard mobile speakers (usually ~2kHz - 4kHz). |
+
+---
+
+## 13. Final Success Metrics (KPIs)
+To consider the MVP a success, the application must achieve:
+1. **100% decode success rate** at 2 meters in a standard office environment.
+2. **>80% decode success rate** at 5+ meters (Long-Range mode) using FEC recovery.
+3. **Zero false positives** (The app must not print garbage text if it only hears random room noise).
+4. Ability to generate a clean, formatted PDF/Paper printout of the received payload.
+
+---
+*This PRD provides the exact blueprint to transition from a simple "audio toy" to a robust, distance-capable acoustic communication protocol running entirely in the browser.*
