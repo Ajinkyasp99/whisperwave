@@ -1,5 +1,5 @@
 import { Modal, Badge } from './ui';
-import { BookOpen, Radio, Shield, Smartphone, Volume2 } from 'lucide-react';
+import { BookOpen, Languages, Radar, Radio, Shield, Smartphone, Volume2 } from 'lucide-react';
 
 export function GuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   return (
@@ -59,6 +59,37 @@ export function GuideModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <h4 className="flex items-center gap-2 text-base font-semibold text-white">
+            <Radar className="h-4 w-4 accent-text" /> Scanning the Room
+          </h4>
+          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-white/70">
+            The <strong>Scan</strong> tab sweeps everything the microphone can hear — 0 Hz to half the sample rate —
+            and tracks each signal that persists, naming what it is likely to be from how it behaves: a steady
+            carrier, a duty-cycled beacon, a sweep, a harmonic stack or broadband noise. When a band lights up the way
+            a WhisperWave transmission does, the scanner retunes the receiver to that profile and starts decoding on
+            its own, so you never have to know which profile the other end chose.
+          </p>
+          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-white/70">
+            It is an <strong>acoustic</strong> scanner: browsers reach the microphone and nothing else. Radio is still
+            reachable second-hand — feed an SDR or scanner's demodulated audio into this device's line-in and every
+            emitter in it is tracked here like a sound in the room.
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <h4 className="flex items-center gap-2 text-base font-semibold text-white">
+            <Languages className="h-4 w-4 accent-text" /> Any Language, On the Fly
+          </h4>
+          <p className="mt-2 text-xs sm:text-sm leading-relaxed text-white/70">
+            Frames carry UTF-8, so the other end can send any language. Each one is identified as it lands — from its
+            writing system and its function words, entirely offline — and rendered in the language you chose. Where
+            the browser offers an on-device translation model, the translation happens locally and nothing leaves the
+            device; where it does not, the language is still named and the original is shown unchanged rather than
+            being sent to some server.
+          </p>
         </div>
 
         <div>

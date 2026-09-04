@@ -123,7 +123,7 @@ function Row({ m }: { m: Received }) {
   );
 }
 
-export function MessageLog() {
+export function MessageLog({ className = '' }: { className?: string } = {}) {
   const { messages, clearMessages, searchQuery, setSearchQuery } = useStore();
 
   const filteredMessages = messages.filter((m) =>
@@ -142,7 +142,7 @@ export function MessageLog() {
   };
 
   return (
-    <Panel cornerMarks>
+    <Panel cornerMarks className={`w-full ${className}`}>
       <PanelTitle
         icon={<FileText className="h-4 w-4" />}
         hint={messages.length ? `${messages.length} FRAMES DECODED` : undefined}

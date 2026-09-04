@@ -278,3 +278,94 @@ export function Modal({
     </div>
   );
 }
+
+export function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+  disabled,
+  icon,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  icon?: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`no-tap flex w-full items-center justify-between gap-3 rounded-xl border p-2.5 text-left transition-all disabled:opacity-40 ${
+        checked
+          ? 'border-white/25 bg-white/[0.07]'
+          : 'border-white/[0.06] bg-white/[0.025] hover:border-white/15 hover:bg-white/[0.05]'
+      }`}
+    >
+      <span className="min-w-0">
+        <span className="flex items-center gap-1.5 text-xs font-bold text-white/85">
+          {icon && <span className="accent-text shrink-0">{icon}</span>}
+          <span className="truncate">{label}</span>
+        </span>
+        {hint && <span className="mt-0.5 block text-[0.62rem] leading-tight text-white/45">{hint}</span>}
+      </span>
+      <span
+        className={`relative h-5 w-9 shrink-0 rounded-full border transition-colors ${
+          checked ? 'border-transparent' : 'border-white/15 bg-white/10'
+        }`}
+        style={checked ? { background: 'var(--accent)' } : undefined}
+      >
+        <span
+          className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${
+            checked ? 'left-[1.15rem]' : 'left-0.5'
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  options: Array<{ value: T; label: string; icon?: ReactNode }>;
+  value: T;
+  onChange: (v: T) => void;
+  ariaLabel: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel}
+      className="flex gap-1 rounded-xl border border-white/[0.08] bg-black/40 p-1"
+    >
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(o.value)}
+            className={`no-tap flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-[0.68rem] font-bold uppercase tracking-wider transition-all ${
+              active ? 'bg-white/[0.1] text-white shadow' : 'text-white/45 hover:bg-white/[0.05] hover:text-white/75'
+            }`}
+            style={active ? { color: 'var(--accent)', borderColor: 'var(--accent)' } : undefined}
+          >
+            <span className="shrink-0">{o.icon}</span>
+            <span className="truncate">{o.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

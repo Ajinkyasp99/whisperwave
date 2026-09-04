@@ -19,18 +19,6 @@ export interface ContextCheck {
 export function checkReceiveSupport(): ContextCheck {
   if (typeof window === 'undefined') return { ok: false, reason: 'No browser environment.' };
 
-  if (!window.isSecureContext) {
-    const url = new URL(window.location.href);
-    url.protocol = 'https:';
-    return {
-      ok: false,
-      reason:
-        'Listening needs a secure connection. This page is on plain HTTP, so the browser will not expose the ' +
-        'microphone. Sending still works.',
-      suggestedUrl: url.toString(),
-    };
-  }
-
   if (!navigator.mediaDevices?.getUserMedia) {
     return { ok: false, reason: 'This browser does not expose a microphone API.' };
   }

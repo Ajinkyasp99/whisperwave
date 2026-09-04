@@ -5,12 +5,13 @@ import { useStore, type Tab } from './store/useStore';
 import { Header } from './components/Header';
 import { GuideModal } from './components/GuideModal';
 import { DiagnosticsModal } from './components/DiagnosticsModal';
-import { LinkFacts } from './components/LinkFacts';
 import { ListenPanel } from './components/ListenPanel';
 import { MessageLog } from './components/MessageLog';
 import { ProfilePicker } from './components/ProfilePicker';
 import { Receipt } from './components/Receipt';
 import { SendPanel } from './components/SendPanel';
+import { ScannerPanel } from './components/ScannerPanel';
+import { TranslatePanel } from './components/TranslatePanel';
 import {
   Send,
   Mic,
@@ -19,12 +20,14 @@ import {
   Info,
   X,
   Radio,
+  Radar,
 } from 'lucide-react';
 
 const TABS: Array<{ id: Tab; label: string; icon: typeof Send }> = [
   { id: 'transceiver', label: 'Transceiver', icon: Radio },
   { id: 'send', label: 'Transmit', icon: Send },
   { id: 'listen', label: 'Receive', icon: Mic },
+  { id: 'scanner', label: 'Scan', icon: Radar },
   { id: 'log', label: 'Messages', icon: MessageSquare },
 ];
 
@@ -80,9 +83,10 @@ export default function App() {
     messages,
     activeModal,
     setActiveModal,
+    scanning,
   } = useStore();
 
-  useWakeLock(listening || transmitting);
+  useWakeLock(listening || transmitting || scanning);
 
   const accent = PROFILES[profileId].accent;
 
@@ -99,16 +103,15 @@ export default function App() {
             <ProfilePicker />
           </div>
 
-          {/* Desktop Dual-Column Instrumentation Grid */}
-          <div className="no-print hidden gap-5 lg:grid lg:grid-cols-2">
-            <div className="space-y-5">
-              <SendPanel />
-              <LinkFacts />
-            </div>
-            <div className="space-y-5">
-              <ListenPanel />
-              <MessageLog />
-            </div>
+          {/* Desktop Dual-Column Instrumentation Grid (Equal Height Panels) */}
+          <div className="no-print hidden lg:grid lg:grid-cols-2 gap-5 items-stretch">
+            <SendPanel />
+            <ListenPanel />
+          </div>
+
+          {/* Desktop Full-Width Verified Message Stream (Directly Below) */}
+          <div className="no-print hidden lg:block">
+            <MessageLog />
           </div>
 
           {/* Mobile Tabbed Views */}
@@ -117,22 +120,25 @@ export default function App() {
               <>
                 <SendPanel />
                 <ListenPanel />
-                <LinkFacts />
+                <MessageLog />
               </>
             )}
-            {tab === 'send' && (
-              <>
-                <SendPanel />
-                <LinkFacts />
-              </>
-            )}
-            {tab === 'listen' && (
-              <>
-                <ListenPanel />
-                <LinkFacts />
-              </>
-            )}
+            {tab === 'send' && <SendPanel />}
+            {tab === 'listen' && <ListenPanel />}
             {tab === 'log' && <MessageLog />}
+          </div>
+
+          {/*
+            The scanner is mounted once and revealed by CSS: on desktop it sits
+            below the instrumentation grid, on mobile it is the Scan tab. A
+            second React instance would mean a second auto-lock loop and a
+            duplicated translation queue.
+          */}
+          <div className={`no-print ${tab === 'scanner' ? '' : 'hidden lg:block'}`}>
+            <div className="grid gap-4 sm:gap-5 lg:grid-cols-2">
+              <ScannerPanel />
+              <TranslatePanel />
+            </div>
           </div>
 
           <Receipt />
@@ -160,6 +166,7 @@ export default function App() {
           const active = tab === t.id;
           const Icon = t.icon;
           const badge = t.id === 'log' && messages.length > 0 ? messages.length : null;
+          const live = t.id === 'scanner' && scanning;
 
           return (
             <button
@@ -188,6 +195,9 @@ export default function App() {
                   <span className="num absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-cyan-400 px-1 text-[0.55rem] font-black text-slate-950 shadow-md">
                     {badge}
                   </span>
+                )}
+                {live && (
+                  <span className="absolute -right-1.5 -top-1 h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
                 )}
               </div>
               <span
