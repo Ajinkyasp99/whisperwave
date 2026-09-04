@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { engine } from '../audio/engine';
 import type { RadioParams } from '../dsp/profiles';
+import { Activity } from 'lucide-react';
 
 /**
  * Live spectrum over the active band, with a waterfall underneath.
@@ -22,14 +23,10 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
 
     let raf = 0;
     let bytes: Uint8Array<ArrayBuffer> | null = null;
-    // Slow-moving estimate of the quietest visible bin. The waterfall is scaled
-    // against this rather than against absolute dBFS: microphone gain varies by
-    // tens of dB between devices, and a fixed mapping either saturates to a
-    // solid block or shows nothing at all.
     let floorRef = 0.35;
     let wasActive = false;
 
-    const accent = getComputedStyle(canvas).getPropertyValue('--accent').trim() || '#22d3ee';
+    const accent = getComputedStyle(canvas).getPropertyValue('--accent').trim() || '#06b6d4';
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -51,19 +48,18 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
       const specH = Math.round(h * 0.46);
       const fallH = h - specH;
 
-      // Clear only the spectrum strip: the waterfall below *is* the history
-      // buffer, and wiping it before scrolling would leave it permanently blank.
-      ctx.fillStyle = '#080b14';
+      // Dark background fill
+      ctx.fillStyle = '#050a14';
       ctx.fillRect(0, 0, w, specH);
 
       const analyser = engine.spectrumAnalyser;
       if (!analyser || !active) {
         wasActive = false;
         ctx.fillRect(0, specH, w, fallH);
-        ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.font = `${Math.round(11 * (window.devicePixelRatio || 1))}px ui-sans-serif, system-ui`;
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.font = `600 ${Math.round(11 * (window.devicePixelRatio || 1))}px -apple-system, system-ui, sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText('microphone off', w / 2, h / 2);
+        ctx.fillText('MICROPHONE INACTIVE · CLICK START LISTENING', w / 2, h / 2);
         return;
       }
 
@@ -73,13 +69,10 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
       analyser.getByteFrequencyData(bytes);
 
       if (!wasActive) {
-        // Wipe the history so the "microphone off" placeholder does not scroll
-        // down through the new trace.
         ctx.fillRect(0, specH, w, fallH);
         wasActive = true;
       }
 
-      // Map the cropped frequency window onto the canvas width.
       const nyquist = engine.sampleRate / 2;
       const margin = (params.bandHigh - params.bandLow) * 0.75;
       const lo = Math.max(0, params.bandLow - margin);
@@ -97,19 +90,26 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
 
       const xOf = (f: number) => ((f - lo) / (hi - lo)) * w;
 
-      // Clip to the spectrum strip. The trace's antialiased stroke otherwise
-      // bleeds a row into the waterfall, and since the waterfall scrolls itself
-      // that stray row is copied down forever, washing the whole history out.
       ctx.save();
       ctx.beginPath();
       ctx.rect(0, 0, w, specH);
       ctx.clip();
 
-      // Band-of-interest backdrop.
-      ctx.fillStyle = 'rgba(255,255,255,0.045)';
+      // Band-of-interest highlighted background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
       ctx.fillRect(xOf(params.bandLow), 0, xOf(params.bandHigh) - xOf(params.bandLow), specH);
 
-      // Spectrum trace.
+      // Subtle horizontal grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      for (let y = 0.25; y <= 0.75; y += 0.25) {
+        ctx.beginPath();
+        ctx.moveTo(0, Math.round(specH * y) + 0.5);
+        ctx.lineTo(w, Math.round(specH * y) + 0.5);
+        ctx.stroke();
+      }
+
+      // Spectrum trace
       ctx.beginPath();
       ctx.moveTo(0, specH);
       for (let x = 0; x < w; x++) {
@@ -120,19 +120,21 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
       }
       ctx.lineTo(w, specH);
       ctx.closePath();
+
       const grad = ctx.createLinearGradient(0, 0, 0, specH);
       grad.addColorStop(0, accent);
-      grad.addColorStop(1, 'rgba(255,255,255,0.02)');
+      grad.addColorStop(0.7, 'rgba(6, 182, 212, 0.2)');
+      grad.addColorStop(1, 'rgba(255, 255, 255, 0.01)');
       ctx.fillStyle = grad;
-      ctx.globalAlpha = 0.55;
+      ctx.globalAlpha = 0.6;
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.strokeStyle = accent;
-      ctx.lineWidth = Math.max(1, (window.devicePixelRatio || 1) * 0.8);
+      ctx.lineWidth = Math.max(1.2, (window.devicePixelRatio || 1) * 0.9);
       ctx.stroke();
       ctx.restore();
 
-      // Waterfall: shift down one row, paint the newest row on top.
+      // Waterfall rendering: shift downward
       if (fallH > 2) {
         const prev = ctx.getImageData(0, specH, w, fallH - 1);
         ctx.putImageData(prev, 0, specH + 1);
@@ -140,28 +142,32 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
         for (let x = 0; x < w; x++) {
           const f = lo + ((hi - lo) * x) / w;
           const v = bytes[Math.min(bytes.length - 1, binOf(f))] / 255;
-          // Subtract the measured floor and curve: an empty room reads as
-          // black, so the moment a chirp arrives it is unmistakable.
           const t = Math.min(1, Math.max(0, (v - floorRef - 0.04) / span) ** 1.5);
           const i = x * 4;
-          if (t < 0.5) {
-            const u = t * 2;
-            row.data[i] = 8 + u * 12;
-            row.data[i + 1] = 11 + u * 99;
-            row.data[i + 2] = 20 + u * 130;
+
+          if (t < 0.35) {
+            const u = t / 0.35;
+            row.data[i] = 5 + u * 15;
+            row.data[i + 1] = 10 + u * 40;
+            row.data[i + 2] = 25 + u * 120;
+          } else if (t < 0.7) {
+            const u = (t - 0.35) / 0.35;
+            row.data[i] = 20 + u * 40;
+            row.data[i + 1] = 50 + u * 150;
+            row.data[i + 2] = 145 + u * 60;
           } else {
-            const u = (t - 0.5) * 2;
-            row.data[i] = 20 + u * 215;
-            row.data[i + 1] = 110 + u * 135;
-            row.data[i + 2] = 150 + u * 105;
+            const u = (t - 0.7) / 0.3;
+            row.data[i] = 60 + u * 195;
+            row.data[i + 1] = 200 + u * 55;
+            row.data[i + 2] = 205 + u * 50;
           }
           row.data[i + 3] = 255;
         }
         ctx.putImageData(row, 0, specH);
       }
 
-      // Band edges, over the spectrum only so the waterfall stays readable.
-      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      // Band edge boundary lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.lineWidth = 1;
       for (const f of [params.bandLow, params.bandHigh]) {
         const x = Math.round(xOf(f)) + 0.5;
@@ -176,15 +182,24 @@ export function Spectrum({ params, active }: { params: RadioParams; active: bool
     return () => cancelAnimationFrame(raf);
   }, [params, active]);
 
+  const loFreq = (params.bandLow - (params.bandHigh - params.bandLow) * 0.75) / 1000;
+  const hiFreq = (params.bandHigh + (params.bandHigh - params.bandLow) * 0.75) / 1000;
+
   return (
-    <div className="relative">
-      <canvas ref={canvasRef} className="h-40 w-full rounded-xl border border-white/8 sm:h-52" />
-      <div className="num pointer-events-none absolute inset-x-2 bottom-1 flex justify-between text-[0.6rem] text-white/35">
-        <span>{((params.bandLow - (params.bandHigh - params.bandLow) * 0.75) / 1000).toFixed(1)} kHz</span>
-        <span className="accent-text">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80 shadow-inner">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 rounded-md bg-black/60 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wider text-white/60 backdrop-blur-md border border-white/10">
+        <Activity className="h-3 w-3 accent-text" />
+        <span>Live Waterfall & FFT</span>
+      </div>
+
+      <canvas ref={canvasRef} className="h-44 w-full sm:h-56 block" />
+
+      <div className="num pointer-events-none absolute inset-x-3 bottom-1.5 flex justify-between text-[0.65rem] font-medium text-white/50">
+        <span>{loFreq.toFixed(1)} kHz</span>
+        <span className="accent-text font-bold rounded bg-black/60 px-1.5 py-0.2 border border-white/10">
           {(params.bandLow / 1000).toFixed(1)}–{(params.bandHigh / 1000).toFixed(1)} kHz
         </span>
-        <span>{((params.bandHigh + (params.bandHigh - params.bandLow) * 0.75) / 1000).toFixed(1)} kHz</span>
+        <span>{hiFreq.toFixed(1)} kHz</span>
       </div>
     </div>
   );
